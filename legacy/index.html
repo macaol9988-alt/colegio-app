@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hora Extra Professores</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <section class="login-view" id="loginView">
+      <div class="login-panel">
+        <p class="eyebrow">Colégio</p>
+        <h1>Hora Extra Professores</h1>
+        <form id="loginForm" class="login-form">
+          <label>
+            Nome
+            <input id="loginName" autocomplete="name" required placeholder="Nome completo" />
+          </label>
+          <label>
+            Senha
+            <input id="loginPassword" autocomplete="current-password" required type="password" placeholder="Senha" />
+          </label>
+          <div class="role-grid" role="radiogroup" aria-label="Tipo de acesso">
+            <button class="role-button active" type="button" data-role="teacher">Professor</button>
+            <button class="role-button" type="button" data-role="coordinator">Coordenação</button>
+            <button class="role-button" type="button" data-role="admin">Admin</button>
+          </div>
+          <button class="primary" type="submit">Entrar</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="teacher-view hidden" id="teacherView" aria-label="Tela do professor">
+      <div id="map" class="teacher-map"></div>
+
+      <header class="teacher-header">
+        <div>
+          <span id="teacherGreeting">Professor</span>
+          <strong id="teacherClock">--:--</strong>
+        </div>
+        <div class="teacher-header-actions">
+          <button class="icon-button light" id="openTeacherRecords" type="button">Registros</button>
+          <button class="icon-button light" id="openTeacherProfile" type="button">Perfil</button>
+        </div>
+      </header>
+
+      <div class="gps-card">
+        <div>
+          <span>Status</span>
+          <strong id="teacherGpsStatus">Buscando GPS</strong>
+        </div>
+        <div>
+          <span>Precisão</span>
+          <strong id="teacherAccuracy">--</strong>
+        </div>
+        <div>
+          <span>Distância</span>
+          <strong id="teacherDistance">--</strong>
+        </div>
+      </div>
+
+      <button class="teacher-register" id="teacherRegister" type="button">Registrar ponto</button>
+    </section>
+
+    <section class="manager-view hidden" id="managerView">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow" id="managerRole">Gestão</p>
+          <h1>Registros de Ponto</h1>
+        </div>
+        <div class="manager-header-actions">
+          <button class="secondary" id="openManagerProfile" type="button">Perfil</button>
+          <div class="clock" aria-live="polite">
+            <span id="currentDate">--</span>
+            <strong id="currentTime">--:--</strong>
+          </div>
+        </div>
+      </header>
+
+      <main class="shell">
+        <details class="panel config-panel discreet-config">
+          <summary>
+            <span>
+              <span class="eyebrow">Escola</span>
+              <strong id="configTitle">Configurar geolocalização</strong>
+            </span>
+            <span class="summary-action">Abrir</span>
+          </summary>
+
+          <form id="settingsForm" class="settings-grid">
+            <label>
+              Latitude
+              <input id="schoolLat" type="number" step="0.000001" required />
+            </label>
+            <label>
+              Longitude
+              <input id="schoolLng" type="number" step="0.000001" required />
+            </label>
+            <label>
+              Raio permitido (m)
+              <input id="allowedRadius" type="number" min="10" max="1000" step="5" required />
+            </label>
+            <button class="secondary" type="submit">Salvar geocerca</button>
+          </form>
+        </details>
+
+        <section class="panel admin-panel hidden" id="adminPanel" aria-labelledby="adminTitle">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Admin</p>
+              <h2 id="adminTitle">Sistema</h2>
+            </div>
+          </div>
+
+          <div class="admin-summary-grid">
+            <div>
+              <span>Professores</span>
+              <strong id="adminTeacherCount">0</strong>
+            </div>
+            <div>
+              <span>Usuários internos</span>
+              <strong id="adminStaffCount">0</strong>
+            </div>
+            <div>
+              <span>Registros</span>
+              <strong id="adminRecordCount">0</strong>
+            </div>
+            <div>
+              <span>Pendentes</span>
+              <strong id="adminPendingCount">0</strong>
+            </div>
+          </div>
+
+          <div class="admin-grid">
+            <section class="admin-box">
+              <h3>Usuários administrativos</h3>
+              <form id="staffForm" class="staff-form">
+                <label>
+                  Nome
+                  <input id="newStaffName" required placeholder="Nome do usuário" />
+                </label>
+                <label>
+                  Perfil
+                  <select id="newStaffRole" required>
+                    <option value="coordinator">Coordenação</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </label>
+                <label>
+                  Senha
+                  <input id="newStaffPassword" required type="password" placeholder="Senha de acesso" />
+                </label>
+                <button class="primary" type="submit">Adicionar usuário</button>
+              </form>
+              <div class="staff-list" id="staffList"></div>
+            </section>
+
+            <section class="admin-box">
+              <h3>Dados do sistema</h3>
+              <div class="admin-tool-actions">
+                <button class="secondary" id="exportBackup" type="button">Exportar backup</button>
+                <label class="file-button">
+                  Restaurar backup
+                  <input id="importBackup" type="file" accept="application/json" />
+                </label>
+                <button class="secondary danger-outline" id="clearRecords" type="button">Limpar registros</button>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="panel teachers-panel" aria-labelledby="teachersTitle">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Equipe</p>
+              <h2 id="teachersTitle">Professores</h2>
+            </div>
+          </div>
+
+          <form id="teacherForm" class="teacher-form">
+            <label>
+              Nome do professor
+              <input id="newTeacherName" required placeholder="Nome completo" />
+            </label>
+            <label>
+              E-mail cadastrado
+              <input id="newTeacherEmail" required type="email" placeholder="professor@colegio.com" />
+            </label>
+            <label>
+              Senha inicial
+              <input id="newTeacherPassword" required type="password" placeholder="Senha de acesso" />
+            </label>
+            <label class="checkbox-label">
+              <input id="newTeacherMustChange" type="checkbox" checked />
+              Solicitar troca no primeiro acesso
+            </label>
+            <div class="teacher-form-actions">
+              <button class="primary" type="submit">Adicionar professor</button>
+              <button class="secondary" id="toggleTeacherOptions" type="button">Opções</button>
+            </div>
+          </form>
+
+          <div class="teacher-admin-list" id="teacherAdminList"></div>
+        </section>
+
+        <section class="panel records-panel" aria-labelledby="recordsTitle">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Gestão</p>
+              <h2 id="recordsTitle">Registros</h2>
+            </div>
+            <div class="manager-actions">
+              <button class="secondary" id="logoutManager" type="button">Sair</button>
+              <button class="secondary" id="approveSelectedRecords" type="button">Aprovar selecionados</button>
+              <button class="secondary" id="approveAllRecords" type="button">Aprovar todos</button>
+              <button class="secondary" id="exportSummaryCsv" type="button">Exportar consolidado</button>
+              <button class="secondary" id="exportPdf" type="button">Exportar PDF</button>
+              <button class="primary" id="exportCsv" type="button">Exportar registros</button>
+            </div>
+          </div>
+
+          <div class="filters">
+            <label>
+              Professor
+              <input id="filterTeacher" placeholder="Filtrar por nome" />
+            </label>
+            <label>
+              Mês
+              <input id="filterMonth" type="month" />
+            </label>
+            <label>
+              Status
+              <select id="filterStatus">
+                <option value="">Todos</option>
+                <option value="Validado">Validado</option>
+                <option value="Fora da geocerca">Fora da geocerca</option>
+                <option value="GPS impreciso">GPS impreciso</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="summary-grid" aria-live="polite">
+            <div>
+              <span>Total</span>
+              <strong id="totalRecords">0</strong>
+            </div>
+            <div>
+              <span>Justificativas</span>
+              <strong id="totalJustifications">0</strong>
+            </div>
+            <div>
+              <span>Validados</span>
+              <strong id="validRecords">0</strong>
+            </div>
+            <div>
+              <span>Pendentes aprovação</span>
+              <strong id="pendingApprovalRecords">0</strong>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th><input id="selectAllRecords" type="checkbox" aria-label="Selecionar todos os registros" /></th>
+                  <th>Data</th>
+                  <th>Professor</th>
+                  <th>Horário</th>
+                  <th>Distância</th>
+                  <th>Precisão</th>
+                  <th>Status</th>
+                  <th>Coordenação</th>
+                  <th>Justificativa</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="recordsBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </section>
+
+    <dialog id="justificationDialog" class="dialog">
+      <form id="justificationForm" method="dialog">
+        <h2>Justificativa</h2>
+        <p>Registro fora do horário de aula.</p>
+        <label>
+          Motivo
+          <textarea id="justificationText" minlength="8" maxlength="240" required></textarea>
+        </label>
+        <div class="dialog-actions">
+          <button class="secondary" value="cancel" type="button" id="cancelJustification">Cancelar</button>
+          <button class="primary" value="confirm" type="submit">Salvar ponto</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="teacherRecordsDialog" class="dialog records-dialog">
+      <form method="dialog">
+        <div class="dialog-heading">
+          <div>
+            <h2>Meus registros</h2>
+            <p id="teacherRecordsSummary">Histórico de ponto</p>
+          </div>
+          <button class="secondary" type="submit">Fechar</button>
+        </div>
+        <div class="teacher-records-list" id="teacherRecordsList"></div>
+      </form>
+    </dialog>
+
+    <dialog id="teacherProfileDialog" class="dialog profile-dialog">
+      <form method="dialog">
+        <div class="dialog-heading">
+          <div>
+            <h2>Perfil</h2>
+            <p>Dados do professor</p>
+          </div>
+          <button class="secondary" type="submit">Fechar</button>
+        </div>
+        <div class="profile-card">
+          <div>
+            <span>Nome</span>
+            <strong id="profileTeacherName">--</strong>
+          </div>
+          <div>
+            <span>Perfil</span>
+            <strong>Professor</strong>
+          </div>
+          <div>
+            <span>Registros</span>
+            <strong id="profileTeacherRecords">0</strong>
+          </div>
+        </div>
+        <button class="primary danger-button" id="logoutTeacher" type="button">Sair</button>
+      </form>
+    </dialog>
+
+    <dialog id="passwordChangeDialog" class="dialog profile-dialog">
+      <form id="passwordChangeForm">
+        <h2>Trocar senha</h2>
+        <p>Defina uma nova senha para continuar.</p>
+        <label>
+          Nova senha
+          <input id="forcedNewPassword" minlength="4" required type="password" />
+        </label>
+        <label>
+          Confirmar senha
+          <input id="forcedConfirmPassword" minlength="4" required type="password" />
+        </label>
+        <button class="primary" type="submit">Salvar nova senha</button>
+      </form>
+    </dialog>
+
+    <dialog id="managerProfileDialog" class="dialog records-dialog">
+      <form method="dialog">
+        <div class="dialog-heading">
+          <div>
+            <h2>Perfil</h2>
+            <p id="managerProfileSubtitle">Dados da coordenação</p>
+          </div>
+          <button class="secondary" type="submit">Fechar</button>
+        </div>
+
+        <div class="profile-card">
+          <div>
+            <span>Nome</span>
+            <strong id="managerProfileName">--</strong>
+          </div>
+          <div>
+            <span>Perfil</span>
+            <strong id="managerProfileRole">--</strong>
+          </div>
+        </div>
+
+        <section class="link-manager">
+          <div class="section-heading compact-heading">
+            <div>
+              <p class="eyebrow">Vínculos</p>
+              <h3>Professores vinculados</h3>
+            </div>
+          </div>
+          <label id="profileCoordinatorLabel" class="hidden">
+            Coordenação
+            <select id="profileCoordinatorSelect"></select>
+          </label>
+          <div class="link-list" id="profileTeacherLinks"></div>
+        </section>
+
+        <section class="link-manager">
+          <div class="section-heading compact-heading">
+            <div>
+              <p class="eyebrow">Turmas</p>
+              <h3>Cadastro de turmas</h3>
+            </div>
+          </div>
+          <form id="classForm" class="class-form">
+            <label>
+              Turma
+              <input id="className" required placeholder="Ex.: 6º Ano A" />
+            </label>
+            <label>
+              Ano letivo
+              <input id="classYear" required type="number" min="2024" max="2100" />
+            </label>
+            <label>
+              Turno
+              <select id="classShift" required>
+                <option value="Manhã">Manhã</option>
+                <option value="Tarde">Tarde</option>
+                <option value="Noite">Noite</option>
+                <option value="Integral">Integral</option>
+              </select>
+            </label>
+            <button class="primary" type="submit">Adicionar turma</button>
+          </form>
+          <div class="class-list" id="classList"></div>
+        </section>
+
+        <section class="link-manager">
+          <div class="section-heading compact-heading">
+            <div>
+              <p class="eyebrow">Ano letivo</p>
+              <h3>Professor por turma</h3>
+            </div>
+          </div>
+          <form id="teacherClassForm" class="class-form">
+            <label>
+              Professor
+              <select id="teacherClassTeacher" required></select>
+            </label>
+            <label>
+              Turma
+              <select id="teacherClassClass" required></select>
+            </label>
+            <label>
+              Ano letivo
+              <input id="teacherClassYear" required type="number" min="2024" max="2100" />
+            </label>
+            <button class="primary" type="submit">Atrelar turma</button>
+          </form>
+          <div class="class-list" id="teacherClassList"></div>
+        </section>
+
+        <button class="primary danger-button" id="logoutManagerProfile" type="button">Sair</button>
+      </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script src="app.js"></script>
+  </body>
+</html>

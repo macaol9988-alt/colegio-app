@@ -1,0 +1,80 @@
+============================================================
+ CHECKLIST DE UPLOAD - Sistema do Colegio na Hostinger
+============================================================
+
+ANTES DE COMECAR
+[ ] Plano Hostinger com suporte a Node.js (Premium ou Business)
+[ ] Dominio ou subdominio configurado
+
+PASSO 1 - BANCO DE DADOS
+[ ] hPanel > Bancos de dados > MySQL
+[ ] Criar banco (anotar: nome, usuario, senha)
+[ ] Abrir phpMyAdmin
+[ ] Selecionar o banco no menu lateral
+[ ] Aba "Importar" > escolher "database/install.sql" > Executar
+[ ] Confirmar mensagem de sucesso (tabelas criadas + admin seed)
+
+PASSO 2 - SUBIR ARQUIVOS
+Pasta da aplicacao (ex.: colegio-app/), enviando:
+[ ] server.js
+[ ] package.json
+[ ] package-lock.json (se existir)
+[ ] src/ (pasta completa)
+[ ] public/ (pasta completa)
+[ ] database/ (pasta completa)
+
+NAO ENVIAR:
+[X] node_modules/
+[X] .env
+[X] legacy/
+[X] .git/
+
+PASSO 3 - APP NODE.JS
+[ ] hPanel > Avancado > Node.js > Criar aplicacao
+[ ] Versao do Node.js: 18 ou superior
+[ ] Modo: Production
+[ ] Raiz do aplicativo: colegio-app (ou pasta escolhida)
+[ ] Arquivo de inicializacao: server.js
+[ ] URL do aplicativo: dominio/subdominio
+[ ] Aguardar npm install automatico
+
+PASSO 4 - VARIAVEIS DE AMBIENTE (no painel Node.js)
+[ ] NODE_ENV = production
+[ ] APP_URL = https://seudominio.com
+[ ] DB_HOST = localhost
+[ ] DB_PORT = 3306
+[ ] DB_NAME = u123456_colegio  (com o seu prefixo)
+[ ] DB_USER = u123456_admin    (com o seu prefixo)
+[ ] DB_PASSWORD = (a que voce criou)
+[ ] JWT_SECRET = (string longa aleatoria - veja DEPLOY.md)
+[ ] JWT_EXPIRES_IN = 12h
+[ ] SKIP_DB_SCHEMA = true
+[ ] SKIP_DB_SEED = true
+
+OPCIONAL - SMTP (e-mail de ativacao/reset):
+[ ] SMTP_HOST = smtp.hostinger.com
+[ ] SMTP_PORT = 465
+[ ] SMTP_SECURE = true
+[ ] SMTP_USER = noreply@seudominio.com
+[ ] SMTP_PASSWORD = (senha do e-mail criado no hPanel)
+[ ] SMTP_FROM_NAME = Nome do colegio
+[ ] SMTP_FROM_EMAIL = noreply@seudominio.com
+
+PASSO 5 - INICIAR
+[ ] Painel Node.js > Iniciar (ou Reiniciar)
+[ ] Acessar https://seudominio.com/api/health
+[ ] Confirmar resposta: { "status": "ok", "db": "ok" }
+
+PASSO 6 - PRIMEIRO LOGIN
+[ ] Acessar https://seudominio.com
+[ ] Login: admin@colegio.com
+[ ] Senha: admin123
+[ ] Trocar senha quando solicitado
+[ ] Configuracoes > Dados do colegio: trocar nome, subir logo
+[ ] Configuracoes > Geocerca: posicionar mapa e ajustar raio
+[ ] Configuracoes > SLA & Chamados: ajustar prazos
+[ ] Usuarios > Novo usuario: criar contas dos professores/TI
+
+============================================================
+ Em caso de duvidas, consulte DEPLOY.md para detalhes
+============================================================
