@@ -18,7 +18,8 @@ module.exports = {
       kill_timeout: 5000,
       env: {
         NODE_ENV: "production",
-        PORT: 3001,                 // porta INTERNA - Nginx vai fazer proxy do dominio para essa porta
+        PORT: 3005,                 // porta INTERNA - Nginx vai fazer proxy do dominio para essa porta
+                                    // (portas 3000-3002 e 3004 ja estao em uso por outros apps na VPS)
       },
       error_file: "./logs/error.log",
       out_file: "./logs/out.log",
