@@ -15,6 +15,12 @@ function isTiOrAdmin(user) {
   return user.role === "admin" || user.role === "ti";
 }
 
+// Usuarios que veem apenas os proprios chamados (nao podem gerenciar fila):
+// professor, monitora, auxiliar educacional
+function isRegularUser(user) {
+  return ["teacher", "monitor", "assistant"].includes(user.role);
+}
+
 async function generateTicketNumber() {
   const year = new Date().getFullYear();
   const last = await queryOne(
@@ -43,7 +49,7 @@ router.get("/", authenticate, async (req, res, next) => {
     const filters = [];
     const params = [];
 
-    if (req.user.role === "teacher" || mine === "1") {
+    if (isRegularUser(req.user) || mine === "1") {
       filters.push("created_by_id = ?");
       params.push(req.user.id);
     }
@@ -92,7 +98,7 @@ router.get("/board", authenticate, async (req, res, next) => {
   try {
     const filters = [];
     const params = [];
-    if (req.user.role === "teacher") {
+    if (isRegularUser(req.user)) {
       filters.push("created_by_id = ?");
       params.push(req.user.id);
     }
@@ -121,9 +127,9 @@ router.get("/board", authenticate, async (req, res, next) => {
 
 router.get("/stats", authenticate, async (req, res, next) => {
   try {
-    const isTeacher = req.user.role === "teacher";
-    const filter = isTeacher ? "WHERE created_by_id = ?" : "";
-    const params = isTeacher ? [req.user.id] : [];
+    const isRegular = isRegularUser(req.user);
+    const filter = isRegular ? "WHERE created_by_id = ?" : "";
+    const params = isRegular ? [req.user.id] : [];
     const rows = await query(
       `SELECT status, COUNT(*) AS total FROM tickets ${filter} GROUP BY status`,
       params,
@@ -134,8 +140,8 @@ router.get("/stats", authenticate, async (req, res, next) => {
       `SELECT COUNT(*) AS total FROM tickets
        WHERE status IN ('Aberto','EmAndamento','Aguardando')
        AND sla_due_at IS NOT NULL AND sla_due_at < NOW()
-       ${isTeacher ? "AND created_by_id = ?" : ""}`,
-      isTeacher ? [req.user.id] : [],
+       ${isRegular ? "AND created_by_id = ?" : ""}`,
+      isRegular ? [req.user.id] : [],
     );
     res.json({ stats, overdue: overdue.total });
   } catch (error) {
@@ -148,7 +154,7 @@ router.get("/:id", authenticate, async (req, res, next) => {
     const id = Number(req.params.id);
     const ticket = await queryOne("SELECT * FROM tickets WHERE id = ?", [id]);
     if (!ticket) return res.status(404).json({ error: "Chamado nao encontrado." });
-    if (req.user.role === "teacher" && ticket.created_by_id !== req.user.id) {
+    if (isRegularUser(req.user) && ticket.created_by_id !== req.user.id) {
       return res.status(403).json({ error: "Sem acesso a este chamado." });
     }
     const comments = await query(
@@ -159,7 +165,7 @@ router.get("/:id", authenticate, async (req, res, next) => {
       "SELECT * FROM ticket_history WHERE ticket_id = ? ORDER BY created_at ASC",
       [id],
     );
-    const visibleComments = req.user.role === "teacher"
+    const visibleComments = isRegularUser(req.user)
       ? comments.filter((c) => !c.is_internal)
       : comments;
     res.json({ ticket, comments: visibleComments, history });
@@ -309,7 +315,7 @@ router.post("/:id/comments", authenticate, async (req, res, next) => {
     const id = Number(req.params.id);
     const ticket = await queryOne("SELECT created_by_id FROM tickets WHERE id = ?", [id]);
     if (!ticket) return res.status(404).json({ error: "Chamado nao encontrado." });
-    if (req.user.role === "teacher" && ticket.created_by_id !== req.user.id) {
+    if (isRegularUser(req.user) && ticket.created_by_id !== req.user.id) {
       return res.status(403).json({ error: "Sem acesso." });
     }
     const { message, is_internal } = req.body || {};

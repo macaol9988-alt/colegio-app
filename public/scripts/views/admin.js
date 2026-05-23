@@ -16,6 +16,8 @@ const Admin = (() => {
               <option value="">Todos perfis</option>
               <option value="teacher">Professor</option>
               <option value="coordinator">Coordenação</option>
+              <option value="monitor">Monitora</option>
+              <option value="assistant">Auxiliar Educacional</option>
               <option value="ti">TI</option>
               <option value="admin">Admin</option>
             </select>
@@ -135,6 +137,8 @@ const Admin = (() => {
             <select class="select" name="role" required>
               <option value="teacher">Professor</option>
               <option value="coordinator">Coordenação</option>
+              <option value="monitor">Monitora</option>
+              <option value="assistant">Auxiliar Educacional</option>
               <option value="ti">TI</option>
               <option value="admin">Admin</option>
             </select>

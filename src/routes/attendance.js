@@ -95,7 +95,8 @@ router.get("/", authenticate, async (req, res, next) => {
     const filters = [];
     const params = [];
 
-    if (req.user.role === "teacher" || mine === "1") {
+    const isRegular = ["teacher", "monitor", "assistant"].includes(req.user.role);
+    if (isRegular || mine === "1") {
       filters.push("teacher_id = ?");
       params.push(req.user.id);
     } else if (teacher) {

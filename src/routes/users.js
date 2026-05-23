@@ -67,7 +67,7 @@ router.post("/", authenticate, requireRole("admin"), async (req, res, next) => {
     }
     if (!isValidEmail(email)) return res.status(400).json({ error: "E-mail invalido." });
     if (cpf && !isValidCpf(cpf)) return res.status(400).json({ error: "CPF invalido." });
-    if (!["teacher", "coordinator", "ti", "admin"].includes(role)) {
+    if (!["teacher", "coordinator", "ti", "admin", "monitor", "assistant"].includes(role)) {
       return res.status(400).json({ error: "Papel invalido." });
     }
     const emailLower = email.toLowerCase().trim();

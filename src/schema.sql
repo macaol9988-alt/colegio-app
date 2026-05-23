@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(150) NOT NULL UNIQUE,
   cpf VARCHAR(14) DEFAULT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
-  role ENUM('teacher','coordinator','ti','admin') NOT NULL DEFAULT 'teacher',
+  role ENUM('teacher','coordinator','ti','admin','monitor','assistant') NOT NULL DEFAULT 'teacher',
   status ENUM('pending','active','blocked') NOT NULL DEFAULT 'pending',
   must_change_password TINYINT(1) DEFAULT 0,
   activation_token VARCHAR(100) DEFAULT NULL,

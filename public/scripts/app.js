@@ -22,7 +22,7 @@ const App = (() => {
       label: "Dashboard",
       icon: "dashboard",
       eyebrow: "Painel",
-      roles: ["teacher", "coordinator", "ti", "admin"],
+      roles: ["teacher", "coordinator", "ti", "admin", "monitor", "assistant"],
       render: () => Dashboard.render(state),
     },
     point: {
@@ -43,7 +43,7 @@ const App = (() => {
       label: "Chamados",
       icon: "tickets",
       eyebrow: "Suporte",
-      roles: ["teacher", "coordinator", "ti", "admin"],
+      roles: ["teacher", "coordinator", "ti", "admin", "monitor", "assistant"],
       render: () => Tickets.render(state),
     },
     users: {
@@ -183,6 +183,8 @@ const App = (() => {
       coordinator: "Coordenação",
       ti: "TI",
       admin: "Administrador",
+      monitor: "Monitora",
+      assistant: "Auxiliar Educacional",
     }[role] || role;
   }
 
