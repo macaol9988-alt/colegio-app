@@ -10,3 +10,5 @@ legacy/
 .DS_Store
 .vscode/
 .idea/
+CREDENCIAIS-VPS.txt
+*-secrets.txt
